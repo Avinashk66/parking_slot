@@ -16,21 +16,31 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/slots", require("./routes/slots"));
 app.use("/api/book", require("./routes/bookings"));
 
-// Serve React frontend in production
+/**
+ * PRODUCTION SETTING:
+ * This block serves the React frontend from the 'frontend/build' directory.
+ * It must come AFTER your API routes.
+ */
 if (process.env.NODE_ENV === "production") {
-app.use(express.static(path.join(__dirname, "client/build")));
-app.get("*", (req, res) => {
-res.sendFile(path.join(__dirname, "client/build", "index.html"));
-});
+  // Use '../frontend/build' because server.js is inside the 'backend' folder
+  const frontendPath = path.join(__dirname, "../frontend/build");
+  
+  app.use(express.static(frontendPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(frontendPath, "index.html"));
+  });
 }
 
 // Connect to MongoDB
 mongoose
-.connect(process.env.MONGO_URI)
-.then(() => {
-console.log("✅ MongoDB connected");
- app.listen(process.env.PORT || 8080, () =>
- console.log(`🚀 Server running on port ${process.env.PORT || 8080}`)
- );
-})
-.catch((err) => console.error("MongoDB connection error:", err));
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    // Defaulting to 8080 for Azure compatibility
+    const PORT = process.env.PORT || 8080; 
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
+  })
+  .catch((err) => console.error("MongoDB connection error:", err));
